@@ -1,0 +1,74 @@
+---
+title       : Detection of hydrological outliers
+subtitle    : 
+author      : Francisco Javier Ospina Salazar
+job         : Statistic student of Universidad Nacional de Colombia
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax,bootstrap, quiz, shiny, interactive]
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+
+--- .class #id 
+
+## Preliminaries
+-IDEAM is a national institute of Colombia in
+charge of cientific information managment and
+everything related to the natural environment in Colombia.
+
+<div class='build'>
+
+<p>-In this project, data from hydrologic stations have been collected
+providing information on several variables such as dissolved oxygen, pH and temperature, among others.</p>
+
+
+<p>-The main goal is to detect multivariate outliers based on a PCA of these variables. This process is described in Jolliffe, I.T.  (2002), Principal Component Analysis - Second Edition, Springer. </p>
+
+</div>
+
+<img class='center' src='http://www.encolombia.com/wp-content/uploads/1999/08/estudio-agua.png' height=250px width=350px/>
+
+---
+
+## D2 and D3 statistics
+The outlier detection process is based on this statistic, each record will be assigned to these 2 values.
+Given the PCA results, here is the math:
+
+-D2 statistic
+
+$$\sum\^{p}_{k = p-q +1} \frac{z_i\^2}{l_k} $$
+
+-D3 statistic
+
+$$\sum\^{p}_{k = 1} z_i\^2 l_k $$
+
+where z corresponds to PCA coordinates, l are eigenvalues, p is the dimension of PCA and q number of principal components that contribute to d.
+
+The user will be allowed to choose the significance level to set a threshold to obtain outliers
+
+---
+
+## Code to calculate D2/D3 statistic quantiles
+```{r}
+cuantil.distrib = function(p,kernel,D,n){
+  dens = density(x = D,kernel = kernel,n=n)
+   h = function(x,p,dens){
+    sup = sum(x < dens$x)
+    vecY = dens$y[1:(length(dens$y)-sup)]
+    ancho =dens$x[2] - dens$x[1]
+    sum(vecY * ancho) - p
+  }
+  b=uniroot(f = h,lower = min(D),upper = max(D),p=p,dens=dens)
+  b$root
+}
+cuantil.distrib(0.95,"gaussian",D2,20000)
+```
+
+--- &interactive
+
+## Density plot of D2 statistic without outliers
+```{r opts.label = 'interactive', results = 'asis',echo=FALSE,options= list(width=300)}
+require(googleVis)
+print(DensD2, tag='chart')
+```
